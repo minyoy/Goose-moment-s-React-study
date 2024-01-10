@@ -1,4 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+
+function usePrevious(value) {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}
 
 function Todo(props) {
   const [isEditing, setEditing] = useState(false);
@@ -12,13 +20,16 @@ function Todo(props) {
     setNewName("");
     setEditing(false);
   }
+  const editFieldRef = useRef(null);
+  const editButtonRef = useRef(null);
+  const wasEditing = usePrevious(isEditing);
   const editingTemplate = (
     <form className="stack-small" onSubmit={handleSubmit}>
       <div className="form-group">
         <label className="todo-label" htmlFor={props.id}>
           {props.name}의 새로운 이름
         </label>
-        <input id={props.id} className="todo-text" type="text" value={newName} onChange={handleChange}/>
+        <input id={props.id} className="todo-text" type="text" value={newName} onChange={handleChange} ref={editFieldRef}/>
       </div>
       <div className="btn-group">
         <button type="button" className="btn todo-cancel" onClick={() => setEditing(false)}>
@@ -46,7 +57,7 @@ function Todo(props) {
         </label>
       </div>
       <div className="btn-group">
-        <button type="button" className="btn" onClick={() => setEditing(true)}>
+        <button type="button" className="btn" onClick={() => setEditing(true)} ref={editButtonRef}>
           편집 <span className="visually-hidden">{props.name}</span>
         </button>
         <button
@@ -58,6 +69,14 @@ function Todo(props) {
       </div>
     </div>
   );
+  useEffect(() => {
+    if (!wasEditing && isEditing) {
+      editFieldRef.current.focus();
+    }
+    if (wasEditing && !isEditing) {
+      editButtonRef.current.focus();
+    }
+  }, [wasEditing, isEditing]);  
   return <li className="todo">{isEditing ? editingTemplate : viewTemplate}</li>;
 }
   
